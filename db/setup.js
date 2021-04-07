@@ -5,11 +5,15 @@ db.serialize(() => {
   db.run("DROP TABLE IF EXISTS Flavours")
   db.run("DROP TABLE IF EXISTS Mixes")
   db.run("DROP TABLE IF EXISTS MixCollection")
+
   db.run(
     `CREATE TABLE "Users" (
       "UserId"	INTEGER NOT NULL UNIQUE,
       "Name"	TEXT NOT NULL,
-      PRIMARY KEY("UserId" AUTOINCREMENT)
+      "Email"	TEXT NOT NULL UNIQUE,
+      "FavoriteMix"	INTEGER,
+      PRIMARY KEY("UserId" AUTOINCREMENT),
+      FOREIGN KEY("FavoriteMix") REFERENCES "Mixes"("MixId")
     )`
   )
   db.run(
@@ -21,20 +25,22 @@ db.serialize(() => {
   )
   db.run(
     `CREATE TABLE "Mixes" (
-    "MixId"	INTEGER NOT NULL UNIQUE,
-    "Name"	TEXT NOT NULL UNIQUE,
-    PRIMARY KEY("MixId" AUTOINCREMENT)
-  )`
+      "MixId"	INTEGER NOT NULL UNIQUE,
+      "Name"	TEXT NOT NULL UNIQUE,
+      "Creator"	INTEGER NOT NULL,
+      PRIMARY KEY("MixId" AUTOINCREMENT),
+      FOREIGN KEY("Creator") REFERENCES "Users"("UserId")
+    )`
   )
   db.run(
-    `CREATE TABLE "MixCollection" (
-      "FlavourId"	INTEGER,
-      "MixId"	INTEGER,
-      FOREIGN KEY("FlavourId") REFERENCES "Mixes"("MixId"),
-      FOREIGN KEY("MixId") REFERENCES "Flavours"("FlavourId")
-    );`
+    `CREATE TABLE "MixFlavours" (
+      "FlavourId"	INTEGER NOT NULL,
+      "MixId"	INTEGER NOT NULL,
+      FOREIGN KEY("FlavourId") REFERENCES "Flavours"("FlavourId"),
+      FOREIGN KEY("MixId") REFERENCES "Mixes"("MixId")
+      )`
   )
-  db.get("PRAGMA foreign_keys = ON")
+
 })
 
 module.exports = db
