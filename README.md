@@ -29,7 +29,7 @@
 #### Example request body (JSON):
 ```json
 {
-  "name": "Banana"
+  "name": "Raspberry"
 }
 ```
 #### Example response:
@@ -127,6 +127,12 @@
 ```
 ### <span style="color:#505050">**PATCH**</span> Cast vote
 `/api/v1/users/:user_id/mixes/:mix_id`
+#### Example request body (JSON):
+```json
+{
+    "email": "falle@gmail.com"
+}
+```
 #### Example response:
 ```json
 {

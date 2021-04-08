@@ -48,22 +48,33 @@ const getAllUsers = () => {
   })
 }
 
-const castVote = ({ user_id, mix_id }) => {
-  if (!user_id || !mix_id) throw ('Invalid query. Required: user_id and mix_id')
+const castVote = ({ user_id, mix_id }, email) => {
+  if (!user_id || !mix_id | !email) throw ('Invalid query. Required: user_id and mix_id in path, email in body')
 
   return new Promise((resolve, reject) => {
-    db.run(
-      `UPDATE Users
-      SET FavoriteMix = ?
+    db.get(
+      `SELECT Email FROM Users
       WHERE UserId = ?`,
-      [mix_id, user_id],
-      function (err) {
-        err && reject(err)
-        !this.changes && resolve({ success: false, message: `Could not cast vote on mix with id ${mix_id}` })
+      [user_id],
+      function (err, row) {
+        if (err) throw (err)
+        if (row.Email.localeCompare(email)) reject({ success: false, message: 'Access denied' })
 
-        resolve({ success: true, message: `User with id ${user_id} cast their vote on mix with id ${mix_id}` })
+        db.run(
+          `UPDATE Users
+          SET FavoriteMix = ?
+          WHERE UserId = ?`,
+          [mix_id, user_id],
+          function (err) {
+            err && reject(err)
+            !this.changes && resolve({ success: false, message: `Could not cast vote on mix with id ${mix_id}` })
+
+            resolve({ success: true, message: `User with id ${user_id} cast their vote on mix with id ${mix_id}` })
+          }
+        )
       }
     )
+
   })
 }
 
