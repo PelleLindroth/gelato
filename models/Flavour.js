@@ -1,18 +1,19 @@
-const db = require('../db')
+const pool = require('../db/connection')
 
 const createFlavour = ({ name }) => {
   if (!name) throw ('Invalid query. Required: name')
 
   return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO Flavours (Name)
-      VALUES (?)`,
+    pool.query(
+      `INSERT INTO Flavours (name)
+      VALUES ($1)
+      RETURNING *`,
       [name],
-      function (err) {
+      (err, result) => {
         err && reject(err)
-        !this.lastID && resolve({ success: false, message: `Could not add flavour ${name} ` })
+        !result.rowCount && resolve({ success: false, message: `Could not add flavour ${name} ` })
 
-        resolve({ success: true, flavour: { name, id: this.lastID } })
+        resolve({ success: true, flavour: result.rows[0] })
       }
     )
   })
@@ -20,13 +21,13 @@ const createFlavour = ({ name }) => {
 
 const getFlavours = () => {
   return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT Name AS name, FlavourId AS id FROM Flavours`,
-      (err, rows) => {
+    pool.query(
+      `SELECT * FROM Flavours`,
+      (err, result) => {
         err && reject(err)
-        !rows.length && resolve({ success: false, message: 'No flavours found' })
+        !result.rows.length && resolve({ success: false, message: 'No flavours found' })
 
-        resolve({ success: true, count: rows.length, data: rows })
+        resolve({ success: true, count: result.rowCount, results: result.rows })
       }
     )
   })
@@ -36,16 +37,17 @@ const updateFlavour = (name, id) => {
   if (!name || !id) throw ('Invalid query. Required: name in body, id in params')
 
   return new Promise((resolve, reject) => {
-    db.run(`
+    pool.query(`
     UPDATE Flavours
-    SET Name = ?
-    WHERE FlavourId = ${id}`,
+    SET Name = $1
+    WHERE flavour_id = ${id}
+    RETURNING *`,
       [name],
-      function (err) {
+      (err, result) => {
         err && reject(err)
-        if (!this.changes) resolve({ success: false, message: `Unable to update flavour with id ${id}` })
+        !result.rows.length && resolve({ success: false, message: `Unable to update flavour with id ${id}` })
 
-        resolve({ success: true, flavour: { name, id } })
+        resolve({ success: true, flavour: result.rows[0] })
       })
   })
 }
