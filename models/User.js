@@ -1,18 +1,19 @@
-const db = require('../db')
+const pool = require('../db/connection')
 
 const createUser = ({ name, email }) => {
   if (!name || !email) throw ('Invalid query. Required: name and email in body')
 
   return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO Users (Name, Email)
-      VALUES (?, ?)`,
+    pool.query(
+      `INSERT INTO users (name, email)
+      VALUES ($1, $2)
+      RETURNING *`,
       [name, email],
-      function (err) {
+      (err, result) => {
         err && reject(err)
-        !this.lastID && resolve({ success: false, message: `Could not create user` })
+        !result.rowCount && resolve({ success: false, message: `Could not create user` })
 
-        resolve({ success: true, user: { name, email, id: this.lastID } })
+        resolve({ success: true, user: result.rows[0] })
       }
     )
   })
@@ -20,15 +21,15 @@ const createUser = ({ name, email }) => {
 
 const getSingleUser = id => {
   return new Promise((resolve, reject) => {
-    db.get(
-      `SELECT UserId AS id, Name AS name, Email AS email, FavoriteMix AS favoriteMix FROM Users
-      WHERE UserId = ?`,
+    pool.query(
+      `SELECT * FROM Users
+      WHERE user_id = $1`,
       [id],
-      (err, row) => {
+      (err, result) => {
         err && reject(err)
-        !row && resolve({ success: false, message: `Could not find user with id ${id}` })
+        !result.rowCount && resolve({ success: false, message: `Could not find user with id ${id}` })
 
-        resolve({ success: true, data: row })
+        resolve({ success: true, data: result.rows[0] })
       }
     )
   })
@@ -36,13 +37,14 @@ const getSingleUser = id => {
 
 const getAllUsers = () => {
   return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT UserId AS id, Name AS name, Email AS email, FavoriteMix AS favoriteMix FROM Users`,
-      function (err, rows) {
+    pool.query(
+      `SELECT * FROM Users
+      ORDER BY user_id`,
+      (err, result) => {
         err && reject(err)
-        !rows.length && resolve({ success: false, count: 0, message: 'No users' })
+        !result.rowCount && resolve({ success: false, message: 'No users found' })
 
-        resolve({ success: true, count: rows.length, data: rows })
+        resolve({ success: true, count: result.rowCount, data: result.rows })
       }
     )
   })
@@ -52,22 +54,22 @@ const castVote = ({ user_id, mix_id }, email) => {
   if (!user_id || !mix_id | !email) throw ('Invalid query. Required: user_id and mix_id in path, email in body')
 
   return new Promise((resolve, reject) => {
-    db.get(
-      `SELECT Email FROM Users
-      WHERE UserId = ?`,
+    pool.query(
+      `SELECT email FROM users
+      WHERE user_id = $1`,
       [user_id],
-      function (err, row) {
-        if (err) throw (err)
-        if (row.Email.localeCompare(email)) reject({ success: false, message: 'Access denied' })
+      (err, result) => {
+        err && reject(err)
+        if (result.rows[0].email.localeCompare(email)) reject({ success: false, message: 'Access denied' })
 
-        db.run(
-          `UPDATE Users
-          SET FavoriteMix = ?
-          WHERE UserId = ?`,
+        pool.query(
+          `UPDATE users
+          SET favorite_mix = $1
+          WHERE user_id = $2`,
           [mix_id, user_id],
-          function (err) {
+          (err, result) => {
             err && reject(err)
-            !this.changes && resolve({ success: false, message: `Could not cast vote on mix with id ${mix_id}` })
+            !result.rowCount && resolve({ success: false, message: `Could not cast vote on mix with id ${mix_id}` })
 
             resolve({ success: true, message: `User with id ${user_id} cast their vote on mix with id ${mix_id}` })
           }

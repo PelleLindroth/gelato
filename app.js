@@ -1,4 +1,5 @@
 const express = require('express')
+require('dotenv').config()
 const app = express()
 const FlavourRoutes = require('./routes/Flavours')
 const UserRoutes = require('./routes/Users')
