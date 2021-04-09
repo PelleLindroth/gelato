@@ -27,30 +27,29 @@ const getSingleMix = id => {
 
   return new Promise((resolve, reject) => {
     pool.query(
-      `SELECT Mixes.Name AS mixName, Mixes.Creator AS creatorId, Users.Name AS creatorName FROM Mixes
-      INNER JOIN Users
-      ON Mixes.Creator = Users.UserId
-      WHERE Mixes.MixId = ? `,
+      `SELECT mixes.name AS mix_name, mixes.creator AS creator_id, users.name AS creator_name FROM Mixes
+      INNER JOIN users
+      ON mixes.creator = users.user_id
+      WHERE mixes.mix_id = $1`,
       [id],
-      (err, row) => {
+      (err, mixResult) => {
         err && reject(err)
-        if (!row) {
-          resolve({ success: false, message: `Could not find mix with id ${id}` })
-        } else {
-          db.all(
-            `SELECT Flavours.name
-              FROM MixFlavours
-              INNER JOIN Flavours
-              ON MixFlavours.FlavourId = Flavours.FlavourId
-              WHERE MixFlavours.MixId = ?`,
-            [id],
-            (err, rows) => {
-              err && reject(err)
+        !mixResult.rowCount && resolve({ success: false, message: `Could not find mix with id ${id}` })
 
-              resolve({ success: true, result: { id, name: row.mixName, flavours: rows.map(row => row.Name), creator: { id: row.creatorId, name: row.creatorName } } })
-            }
-          )
-        }
+        pool.query(
+          `SELECT flavours.name
+              from mix_flavours
+              INNER JOIN flavours
+              USING (flavour_id)
+              WHERE mix_flavours.mix_id = $1`,
+          [id],
+          (err, flavourResult) => {
+            err && reject(err)
+
+            resolve({ success: true, result: { id, name: mixResult.rows[0].name, flavours: flavourResult.rows.map(row => row.name), creator: { id: mixResult.rows[0].creator_id, name: mixResult.rows[0].creator_name } } })
+          }
+        )
+
       }
     )
   })
