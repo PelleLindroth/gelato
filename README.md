@@ -6,22 +6,26 @@
 #### Example response:
 ```json 
 {
-  "success": true,
-  "count": 13,
-  "data": [
-    {
-      "name": "Vanilla",
-      "id": 1
-    },
-    {
-      "name": "Chocolate",
-      "id": 2
-    },
-    {
-      "name": "Strawberry",
-      "id": 3
-    }
-  ]
+    "success": true,
+    "count": 4,
+    "results": [
+        {
+            "flavour_id": 1,
+            "name": "Vanilla"
+        },
+        {
+            "flavour_id": 2,
+            "name": "Chocolate"
+        },
+        {
+            "flavour_id": 3,
+            "name": "Strawberry"
+        },
+        {
+            "flavour_id": 4,
+            "name": "Blueberry"
+        }
+    ]
 }
 ```
 ### <span style="color:#FFB401;font-weight:bold">**POST**</span> Create flavour
@@ -29,17 +33,17 @@
 #### Example request body (JSON):
 ```json
 {
-  "name": "Raspberry"
+  "name": "Cherry"
 }
 ```
 #### Example response:
 ```json
 {
-  "success": true,
-  "flavour": {
-    "name": "Raspberry",
-    "id": 4
-  }
+    "success": true,
+    "flavour": {
+        "flavour_id": 5,
+        "name": "Cherry"
+    }
 }
 ```
 ### <span style="color:#505050">**PATCH**</span> Update flavour
@@ -47,17 +51,17 @@
 #### Example request body (JSON):
 ```json
 {
-  "name": "Blueberry"
+  "name": "Pecan"
 }
 ```
 #### Example response:
 ```json
 {
-  "success": true,
-  "flavour": {
-    "name": "Blueberry",
-    "id": "4"
-  }
+    "success": true,
+    "flavour": {
+        "flavour_id": 5,
+        "name": "Pecan"
+    }
 }
 ```
 ## Users
@@ -67,19 +71,20 @@
 #### Example request body:
 ```json
 {
-  "name": "Jonte",
-  "email": "jonte@yahoo.com"
+  "name": "Kenta",
+  "email": "kenta@spray.se"
 }
 ```
 #### Example response:
 ```json
 {
-  "success": true,
-  "user": {
-    "name": "Jonte",
-    "email": "jonte@yahoo.com",
-    "id": 3
-  }
+    "success": true,
+    "user": {
+        "user_id": 4,
+        "name": "Kenta",
+        "email": "kenta@spray.se",
+        "favorite_mix": null
+    }
 }
 ```
 ### <span style="color:#0CBC52">**GET**</span> Get all users
@@ -87,28 +92,34 @@
 #### Example response:
 ```json
 {
-  "success": true,
-  "count": 3,
-  "data": [
-    {
-      "id": 1,
-      "name": "Kenta",
-      "email": "kenta@hotmail.com",
-      "favoriteMix": 2
-    },
-    {
-      "id": 2,
-      "name": "Falle",
-      "email": "falle@gmail.com",
-      "favoriteMix": 4
-    },
-    {
-      "id": 3,
-      "name": "Jonte",
-      "email": "jonte@yahoo.com",
-      "favoriteMix": null
-    }
-  ]
+    "success": true,
+    "count": 4,
+    "results": [
+        {
+            "user_id": 1,
+            "name": "Falle",
+            "email": "falle@yahoo.com",
+            "favorite_mix": null
+        },
+        {
+            "user_id": 2,
+            "name": "Koffe",
+            "email": "koffe@yahoo.com",
+            "favorite_mix": null
+        },
+        {
+            "user_id": 3,
+            "name": "Olle",
+            "email": "olle@yahoo.com",
+            "favorite_mix": null
+        },
+        {
+            "user_id": 4,
+            "name": "Kenta",
+            "email": "kenta@spray.se",
+            "favorite_mix": null
+        }
+    ]
 }
 ```
 ### <span style="color:#0CBC52">**GET**</span> Get single user
@@ -116,13 +127,13 @@
 #### Example response:
 ```json
 {
-  "success": true,
-  "data": {
-    "id": 2,
-    "name": "Falle",
-    "email": "falle@gmail.com",
-    "favoriteMix": 4
-  }
+    "success": true,
+    "result": {
+        "user_id": 2,
+        "name": "Koffe",
+        "email": "koffe@yahoo.com",
+        "favorite_mix": null
+    }
 }
 ```
 ### <span style="color:#505050">**PATCH**</span> Cast vote
@@ -130,7 +141,7 @@
 #### Example request body (JSON):
 ```json
 {
-    "email": "falle@gmail.com"
+    "email": "koffe@yahoo.com"
 }
 ```
 #### Example response:
@@ -159,7 +170,7 @@
         "Fudge"
       ],
       "creator": {
-        "id": 2,
+        "id": 1,
         "name": "Falle"
       }
     },
@@ -172,7 +183,7 @@
         "Oreo"
       ],
       "creator": {
-        "id": 1,
+        "id": 4,
         "name": "Kenta"
       }
 }
@@ -211,21 +222,21 @@
 #### Example request (JSON)
 ```json
 {
-  "name": "Jontes 115:e mix"
+  "name": "Kentas bärbonanza"
 }
 ```
 #### Example response:
 ```json
 {
-  "success": true,
-  "mix": {
-    "name": "Jontes 115:e mix",
-    "id": 3
-  },
-  "creator": {
-    "id": 3,
-    "name": "Jonte"
-  }
+    "success": true,
+    "mix": {
+        "name": "Kentas bärbonanza",
+        "id": 5
+    },
+    "creator": {
+        "name": "Kenta",
+        "id": 4
+    }
 }
 ```
 
@@ -234,15 +245,15 @@
 #### Example response:
 ```json
 {
-  "success": true,
-  "mix": {
-    "id": "3",
-    "name": "Jontes 115:e mix"
-  },
-  "flavour": {
-    "id": "2",
-    "name": "Chocolate"
-  }
+    "success": true,
+    "mix": {
+        "id": "1",
+        "name": "Falles första mix"
+    },
+    "flavour": {
+        "id": "4",
+        "name": "Blueberry"
+    }
 }
 ```
 ### <span style="color:#EC2013;font-weight:bold">**DELETE**</span> Remove flavour from mix
@@ -250,8 +261,8 @@
 #### Example response:
 ```json
 {
-  "success": true,
-  "message": "Removed flavour Chocolate from mix Jontes 115:e mix"
+    "success": true,
+    "message": "Removed flavour Chocolate from mix Koffes special"
 }
 ```
 ### <span style="color:#EC2013;font-weight:bold">**DELETE**</span> Delete mix
