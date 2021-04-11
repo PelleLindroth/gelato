@@ -3,80 +3,68 @@ const pool = require('../db/connection')
 const createUser = ({ name, email }) => {
   if (!name || !email) throw ('Invalid query. Required: name and email in body')
 
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `INSERT INTO users (name, email)
-      VALUES ($1, $2)
-      RETURNING *`,
-      [name, email],
-      (err, result) => {
-        err && reject(err)
-        !result.rowCount && resolve({ success: false, message: `Could not create user` })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const result = await pool.query(
+        `INSERT INTO users (name, email, role)
+        VALUES ($1, $2, 'customer')
+        RETURNING *`,
+        [name, email]
+      )
 
-        resolve({ success: true, user: result.rows[0] })
-      }
-    )
+      !result.rowCount && reject({ message: `Could not create user` })
+
+      resolve({ success: true, user: result.rows[0] })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
 const getSingleUser = id => {
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `SELECT * FROM Users
-      WHERE user_id = $1`,
-      [id],
-      (err, result) => {
-        err && reject(err)
-        !result.rowCount && resolve({ success: false, message: `Could not find user with id ${id}` })
+  if (!id) throw ('Invalid query. Required: user_id')
 
-        resolve({ success: true, data: result.rows[0] })
-      }
-    )
+  return new Promise(async (resolve, reject) => {
+    try {
+      const result = await pool.query(`SELECT * FROM Users WHERE user_id = $1`, [id])
+
+      !result.rowCount && reject({ message: `Could not find user with id ${id}` })
+
+      resolve({ success: true, user: result.rows[0] })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
 const getAllUsers = () => {
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `SELECT * FROM Users
-      ORDER BY user_id`,
-      (err, result) => {
-        err && reject(err)
-        !result.rowCount && resolve({ success: false, message: 'No users found' })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const result = await pool.query(`SELECT * FROM UsersORDER BY user_id`)
 
-        resolve({ success: true, count: result.rowCount, data: result.rows })
-      }
-    )
-  })
+      !result.rowCount && reject({ message: 'No users found' })
+
+      resolve({ success: true, count: result.rowCount, results: result.rows })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
+  }
+  )
 }
 
 const castVote = ({ user_id, mix_id }, email) => {
   if (!user_id || !mix_id | !email) throw ('Invalid query. Required: user_id and mix_id in path, email in body')
 
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `SELECT email FROM users
-      WHERE user_id = $1`,
-      [user_id],
-      (err, result) => {
-        err && reject(err)
-        if (result.rows[0].email.localeCompare(email)) reject({ success: false, message: 'Access denied' })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const authResult = await pool.query(`SELECT email FROM users WHERE user_id = $1`, [user_id])
 
-        pool.query(
-          `UPDATE users
-          SET favorite_mix = $1
-          WHERE user_id = $2`,
-          [mix_id, user_id],
-          (err, result) => {
-            err && reject(err)
-            !result.rowCount && resolve({ success: false, message: `Could not cast vote on mix with id ${mix_id}` })
+      authResult.rows[0].email.localeCompare(email) && reject({ message: 'Access denied' })
 
-            resolve({ success: true, message: `User with id ${user_id} cast their vote on mix with id ${mix_id}` })
-          }
-        )
-      }
-    )
+      const result = await pool.query(
+        `UPDATE users
+            SET favorite_mix = $1
+            WHERE user_id = $2`,
+        [mix_id, user_id])
 
+      !result.rowCount && reject({ message: `Could not cast vote on mix with id ${mix_id}` })
+
+      resolve({ success: true, message: `User with id ${user_id} cast their vote on mix with id ${mix_id}` })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 

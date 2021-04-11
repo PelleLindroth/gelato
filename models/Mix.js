@@ -1,231 +1,221 @@
 const pool = require('../db/connection')
-const Utils = require('../utils/modelUtils')
 
 const getAllMixes = () => {
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `SELECT mixes.name AS mix_name, users.name AS creator_name, mixes.creator AS creator_id, mixes.mix_id, flavours.name AS flavour_name
-      FROM mix_flavours
-      INNER JOIN flavours USING(flavour_id)
-      INNER JOIN mixes USING(mix_id)
-      INNER JOIN users ON mixes.creator = users.user_id
-      ORDER BY mix_flavours.mix_id`,
-      (err, result) => {
-        err && reject(err)
-        !result.rows.length && resolve({ success: false, message: 'No mixes found' })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const mixResult = await pool.query(
+        `SELECT mix_id, mixes.name, users.name AS creator_name, users.user_id AS creator_id
+        FROM mixes INNER JOIN users 
+        ON mixes.creator = users.user_id
+        ORDER BY mix_id`)
 
-        const reply = Utils.buildMixesReply(result.rows)
+      for (let mix of mixResult.rows) {
+        const flavourResults = await pool.query(
+          `SELECT flavour_id, name FROM flavours 
+          INNER JOIN mix_flavours 
+          USING(flavour_id)
+          WHERE mix_id = $1`, [mix.mix_id]
+        )
 
-        resolve(reply)
+        const votesResult = await pool.query(
+          `SELECT COUNT(*) AS votes FROM users
+          INNER JOIN mixes
+          ON favorite_mix = mix_id
+          WHERE mix_id = $1`, [mix.mix_id]
+        )
+
+        mix.creator = { user_id: mix.creator_id, name: mix.creator_name }
+        delete mix.creator_name
+        delete mix.creator_id
+        mix.flavours = flavourResults.rows
+        mix.votes = +votesResult.rows[0].votes
       }
-    )
+
+      resolve({ success: true, count: mixResult.rowCount, results: mixResult.rows })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
 const getSingleMix = id => {
   if (!id) throw ('Invalid query. Required: id')
 
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `SELECT mixes.name AS mix_name, mixes.creator AS creator_id, users.name AS creator_name FROM Mixes
-      INNER JOIN users
-      ON mixes.creator = users.user_id
-      WHERE mixes.mix_id = $1`,
-      [id],
-      (err, mixResult) => {
-        err && reject(err)
-        !mixResult.rowCount && resolve({ success: false, message: `Could not find mix with id ${id}` })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const mixResult = await pool.query(
+        `SELECT mixes.name AS mix_name, mixes.creator AS creator_id, users.name AS creator_name FROM Mixes
+        INNER JOIN users
+        ON mixes.creator = users.user_id
+        WHERE mixes.mix_id = $1`,
+        [id])
 
-        pool.query(
-          `SELECT flavours.name
-              from mix_flavours
-              INNER JOIN flavours
-              USING (flavour_id)
-              WHERE mix_flavours.mix_id = $1`,
-          [id],
-          (err, flavourResult) => {
-            err && reject(err)
+      !mixResult.rowCount && reject({ message: `Could not find mix with id ${id}` })
 
-            resolve({ success: true, result: { id, name: mixResult.rows[0].name, flavours: flavourResult.rows.map(row => row.name), creator: { id: mixResult.rows[0].creator_id, name: mixResult.rows[0].creator_name } } })
-          }
-        )
+      const flavourResult = await pool.query(
+        `SELECT flavours.flavour_id, flavours.name
+        from mix_flavours
+        INNER JOIN flavours
+        USING (flavour_id)
+        WHERE mix_flavours.mix_id = $1`, [id]
+      )
 
-      }
-    )
-  })
-}
+      const votesResult = await pool.query(
+        `SELECT COUNT(*) AS votes FROM users
+        INNER JOIN mixes
+        ON favorite_mix = mix_id
+        WHERE mix_id = $1`, [id]
+      )
 
-const getAllVotes = () => {
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `SELECT mixes.name, COUNT(*) AS votes FROM users
-      INNER JOIN mixes
-      ON mixes.mix_id = users.favorite_mix
-      GROUP BY mixes.name
-      ORDER BY votes DESC`,
-      (err, result) => {
-        err && reject(err)
+      resolve({
+        success: true,
+        result: {
+          mixes_id: +id,
+          name: mixResult.rows[0].mix_name,
+          creator: {
+            user_id: mixResult.rows[0].creator_id,
+            name: mixResult.rows[0].creator_name
+          },
+          flavours: flavourResult.rows,
+          votes: +votesResult.rows[0].votes
+        }
+      })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
 
-        resolve({ success: true, message: 'Only showing mixes with at least 1 vote', count: result.rowCount, results: result.rows })
-      }
-    )
-  })
-}
-
-const getVotes = id => {
-  if (!id) throw ('Invalid query. Required: id')
-
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `SELECT COUNT(*) as votes FROM users
-      INNER JOIN mixes
-      ON users.favorite_mix = $1 AND mixes.mix_id = users.favorite_mix`,
-      [id],
-      (err, result) => {
-        err && reject(err)
-        console.log(result);
-        resolve({ success: true, votes: result.rows[0].votes })
-      }
-    )
   })
 }
 
 const createEmptyMix = (name, creator) => {
   if (!name || !creator) throw ('Invalid query. Required: name and creator')
 
-  return new Promise((resolve, reject) => {
-    pool.query(`
-     INSERT INTO Mixes (name, creator)
-     VALUES ($1, $2)
-      RETURNING *`,
-      [name, creator],
-      (err, mixResult) => {
-        err && reject(err)
+  return new Promise(async (resolve, reject) => {
+    try {
+      const mixResult = await pool.query(`
+      INSERT INTO mixes (name, creator)
+      VALUES ($1, $2)
+       RETURNING *`, [name, creator]
+      )
 
-        pool.query(
-          `SELECT name, user_id FROM Users
-          WHERE user_id = $1`,
-          [creator],
-          (err, userResult) => {
-            err && reject(err)
+      const userResult = await pool.query(
+        `SELECT user_id, name FROM Users
+       WHERE user_id = $1`, [creator]
+      )
 
-            resolve({ success: true, mix: { name, id: mixResult.rows[0].mix_id }, creator: { name: userResult.rows[0].name, id: userResult.rows[0].user_id } })
-          }
-        )
+      resolve({ success: true, mix: mixResult.rows[0], creator: userResult.rows[0] })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
+  })
+}
+
+const addFlavour = ({ mix_id, user_id, flavour_id }) => {
+  if (!mix_id || !user_id || !flavour_id) throw ('Invalid query. Required: mix_id, user_id and flavour_id')
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const mixResult = await pool.query(
+        `SELECT * FROM mixes
+        WHERE mix_id = $1`, [mix_id]
+      )
+      !mixResult.rowCount && reject({ message: `Found no mix with id ${mix_id}` })
+      mixResult.rows[0].creator != user_id && reject({ message: 'Access denied' })
+
+      const result = await pool.query(
+        `INSERT INTO mix_flavours
+        VALUES ($1, $2) 
+        RETURNING *`,
+        [flavour_id, mix_id])
+
+      !result.rowCount && reject({ message: `Could not add flavour with id ${flavour_id} to mix with id ${mix_id}` })
+
+      const nameResult = await pool.query(
+        `SELECT flavours.name as flavour_name, mixes.name as mix_name
+        FROM mix_flavours
+        INNER JOIN flavours
+        USING (flavour_id)
+        INNER JOIN mixes
+        USING (mix_id)
+        WHERE mix_id = $1 AND flavour_id = $2`, [mix_id, flavour_id]
+      )
+
+      resolve({ success: true, mix: { id: mix_id, name: nameResult.rows[0].mix_name }, flavour: { id: flavour_id, name: nameResult.rows[0].flavour_name } })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
+  })
+}
+
+const removeFlavour = ({ mix_id, user_id, flavour_id }) => {
+  if (!mix_id || !user_id || !flavour_id) throw ('Invalid query. Required: mix_id, user_id and flavour_id')
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const mixResult = await pool.query(
+        `SELECT * FROM mixes
+        WHERE mix_id = $1`, [mix_id]
+      )
+      !mixResult.rowCount && reject({ message: `Found no mix with id ${mix_id}` })
+      mixResult.rows[0].creator != user_id && reject({ message: 'Access denied' })
+
+      const deleteResult = await pool.query(
+        `DELETE FROM mix_flavours
+        WHERE mix_id = $1 AND flavour_id = $2
+        RETURNING *`,
+        [mix_id, flavour_id])
+
+      !deleteResult.rowCount && reject({ message: `Could not remove flavour with id ${flavour_id} from mix with id ${mix_id}` })
+
+      const result = await pool.query(
+        `SELECT DISTINCT mixes.name AS mix_name, flavours.name AS flavour_name
+            FROM mix_flavours
+            INNER JOIN flavours
+            USING (flavour_id)
+            INNER JOIN mixes
+            ON mixes.mix_id = $1 AND flavours.flavour_id = $2`,
+        [mix_id, flavour_id]
+      )
+
+      resolve({
+        success: true,
+        message: `Removed flavour ${result.rows[0].flavour_name} from mix ${result.rows[0].mix_name}`
       })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
-const addFlavour = ({ mix_id, flavour_id }) => {
-  console.log('here');
-  if (!mix_id || !flavour_id) throw ('Invalid query. Required: mix_id and flavour_id')
+const deleteMix = ({ mix_id, user_id }) => {
+  if (!mix_id || !user_id) throw ('Invalid query. Required: mix_id and user_id')
 
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `INSERT INTO mix_flavours
-      VALUES ($1, $2) 
-      RETURNING *`,
-      [flavour_id, mix_id],
-      (err, result) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const mixResult = await pool.query(
+        `SELECT * FROM mixes
+        WHERE mix_id = $1`, [mix_id]
+      )
+      !mixResult.rowCount && reject({ message: `Found no mix with id ${mix_id}` })
+      mixResult.rows[0].creator != user_id && reject({ message: 'Access denied' })
 
-        err && reject(err)
-        !result.rowCount && resolve({ success: false, message: `Could not add flavour with id ${flavour_id} to mix with id ${mix_id}` })
+      await pool.query(
+        `UPDATE users
+        SET favorite_mix = NULL
+        WHERE favorite_mix = $1`, [mix_id]
+      )
 
-        pool.query(
-          `SELECT flavours.name as flavour_name, mixes.name as mix_name
-          FROM mix_flavours
-          INNER JOIN flavours
-          ON mix_flavours.flavour_id = flavours.flavour_id
-          INNER JOIN mixes
-          ON mix_flavours.mix_id = mixes.mix_id
-          WHERE mixes.mix_id = $1 and flavours.flavour_id = $2`,
-          [mix_id, flavour_id],
-          (err, result) => {
-            console.log(result)
-            err && reject(err)
+      await pool.query(
+        `DELETE FROM mix_flavours
+        WHERE mix_id = $1`, [mix_id]
+      )
 
-            resolve({ success: true, mix: { id: mix_id, name: result.rows[0].mix_name }, flavour: { id: flavour_id, name: result.rows[0].flavour_name } })
-          }
-        )
-      }
-    )
-  })
-}
+      const result = await pool.query(
+        `DELETE FROM mixes
+        WHERE mix_id = $1
+        RETURNING *`, [mix_id]
+      )
 
-const removeFlavour = ({ mix_id, flavour_id }) => {
-  if (!mix_id || !flavour_id) throw ('Invalid query. Required: mix_id and flavour_id')
+      !result.rowCount && reject({ message: `Could not find mix with id ${mix_id}` })
 
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `DELETE FROM mix_flavours
-      WHERE mix_id = $1 AND flavour_id = $2`,
-      [mix_id, flavour_id],
-      (err, deleteResult) => {
-        err && reject(err)
-        !deleteResult.rowCount && resolve({ success: false, message: `Could not remove flavour with id ${flavour_id} from mix with id ${mix_id}` })
-
-        pool.query(
-          `SELECT DISTINCT mixes.name AS mix_name, flavours.name AS flavour_name
-          FROM mix_flavours
-          INNER JOIN flavours
-          USING (flavour_id)
-          INNER JOIN mixes
-          ON mixes.mix_id = $1 AND flavours.flavour_id = $2`,
-          [mix_id, flavour_id],
-          (err, result) => {
-            console.log(result)
-            err && reject(err)
-            resolve({ success: true, message: `Removed flavour ${result.rows[0].flavour_name} from mix ${result.rows[0].mix_name}` })
-          }
-        )
-      }
-    )
-  })
-}
-
-const deleteMix = id => {
-  if (!id) throw ('Invalid query. Required: id')
-
-  return new Promise((resolve, reject) => {
-    pool.query(
-      `UPDATE users
-      SET favorite_mix = NULL
-      WHERE favorite_mix = $1`,
-      [id],
-      (err) => {
-        err && reject(err)
-
-        pool.query(
-          `DELETE FROM mix_flavours
-            WHERE mix_id = $1`,
-          [id],
-          (err) => {
-            err && reject(err)
-
-            pool.query(
-              `DELETE FROM mixes
-              WHERE mix_id = $1
-              RETURNING *`,
-              [id],
-              (err, result) => {
-                err && reject(err)
-                !result.rowCount && resolve({ success: false, message: `Could not find mix with id ${id}` })
-
-                resolve({ success: true, message: `Mix with id ${id} deleted` })
-              }
-            )
-          }
-        )
-      }
-    )
+      resolve({ success: true, message: `Mix with id ${mix_id} deleted` })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
 module.exports = {
   getAllMixes,
   getSingleMix,
-  getAllVotes,
-  getVotes,
   createEmptyMix,
   addFlavour,
   removeFlavour,
