@@ -16,7 +16,7 @@ const getAllUsers = async (req, res, next) => {
 }
 
 const castVote = async (req, res, next) => {
-  try { res.json(await User.castVote(req.params)) }
+  try { res.json(await User.castVote(req.params, req.body.email)) }
   catch (err) { next(err) }
 }
 

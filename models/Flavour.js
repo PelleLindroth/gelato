@@ -1,52 +1,54 @@
-const db = require('../db')
+const pool = require('../db/connection')
 
 const createFlavour = ({ name }) => {
   if (!name) throw ('Invalid query. Required: name')
 
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO Flavours (Name)
-      VALUES (?)`,
-      [name],
-      function (err) {
-        err && reject(err)
-        !this.lastID && resolve({ success: false, message: `Could not add flavour ${name} ` })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const result = await pool.query(
+        `INSERT INTO Flavours (name)
+        VALUES ($1)
+        RETURNING *`,
+        [name])
 
-        resolve({ success: true, flavour: { name, id: this.lastID } })
-      }
-    )
-  })
+      !result.rowCount && reject({ message: `Could not add flavour ${name} ` })
+
+      resolve({ success: true, flavour: result.rows[0] })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
+  }
+  )
 }
 
 const getFlavours = () => {
-  return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT Name AS name, FlavourId AS id FROM Flavours`,
-      (err, rows) => {
-        err && reject(err)
-        !rows.length && resolve({ success: false, message: 'No flavours found' })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const result = await pool.query(
+        `SELECT * FROM Flavours`)
 
-        resolve({ success: true, count: rows.length, data: rows })
-      }
-    )
-  })
+      !result.rows.length && reject({ message: 'No flavours found' })
+
+      resolve({ success: true, count: result.rowCount, results: result.rows })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
+  }
+  )
 }
 
 const updateFlavour = (name, id) => {
   if (!name || !id) throw ('Invalid query. Required: name in body, id in params')
 
-  return new Promise((resolve, reject) => {
-    db.run(`
-    UPDATE Flavours
-    SET Name = ?
-    WHERE FlavourId = ${id}`,
-      [name],
-      function (err) {
-        err && reject(err)
-        if (!this.changes) resolve({ success: false, message: `Unable to update flavour with id ${id}` })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const result = await pool.query(`
+      UPDATE Flavours
+      SET Name = $1
+      WHERE flavour_id = ${id}
+      RETURNING *`,
+        [name])
 
-        resolve({ success: true, flavour: { name, id } })
-      })
+      !result.rows.length && reject({ message: `Unable to update flavour with id ${id}` })
+
+      resolve({ success: true, flavour: result.rows[0] })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
