@@ -9,38 +9,39 @@ const createUser = ({ name, email }) => {
         `INSERT INTO users (name, email, role)
         VALUES ($1, $2, 'customer')
         RETURNING *`,
-        [name, email])
+        [name, email]
+      )
 
       !result.rowCount && reject({ message: `Could not create user` })
 
       resolve({ success: true, user: result.rows[0] })
-    } catch (err) { reject(err) }
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
 const getSingleUser = id => {
-  if (!id) throw ('Invalid query. Required: ')
+  if (!id) throw ('Invalid query. Required: user_id')
+
   return new Promise(async (resolve, reject) => {
     try {
-      const { rowCount, rows } = await pool.query(`SELECT * FROM Users WHERE user_id = $1`, [id])
-      !rowCount && reject({ message: `Could not find user with id ${id}` })
+      const result = await pool.query(`SELECT * FROM Users WHERE user_id = $1`, [id])
 
-      resolve({ success: true, user: rows[0] })
-    } catch (err) { reject(err) }
+      !result.rowCount && reject({ message: `Could not find user with id ${id}` })
+
+      resolve({ success: true, user: result.rows[0] })
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
 const getAllUsers = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      const result = await pool.query(
-        `SELECT * FROM Users
-        ORDER BY user_id`)
+      const result = await pool.query(`SELECT * FROM UsersORDER BY user_id`)
 
       !result.rowCount && reject({ message: 'No users found' })
 
       resolve({ success: true, count: result.rowCount, results: result.rows })
-    } catch (err) { reject(err) }
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   }
   )
 }
@@ -50,10 +51,7 @@ const castVote = ({ user_id, mix_id }, email) => {
 
   return new Promise(async (resolve, reject) => {
     try {
-      const authResult = await pool.query(
-        `SELECT email FROM users
-        WHERE user_id = $1`,
-        [user_id])
+      const authResult = await pool.query(`SELECT email FROM users WHERE user_id = $1`, [user_id])
 
       authResult.rows[0].email.localeCompare(email) && reject({ message: 'Access denied' })
 
@@ -66,7 +64,7 @@ const castVote = ({ user_id, mix_id }, email) => {
       !result.rowCount && reject({ message: `Could not cast vote on mix with id ${mix_id}` })
 
       resolve({ success: true, message: `User with id ${user_id} cast their vote on mix with id ${mix_id}` })
-    } catch (err) { eject(err) }
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 

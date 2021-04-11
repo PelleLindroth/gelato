@@ -32,7 +32,7 @@ const getAllMixes = () => {
       }
 
       resolve({ success: true, count: mixResult.rowCount, results: mixResult.rows })
-    } catch (err) { reject(err) }
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
@@ -48,7 +48,7 @@ const getSingleMix = id => {
         WHERE mixes.mix_id = $1`,
         [id])
 
-      !mixResult.rowCount && resolve({ success: false, message: `Could not find mix with id ${id}` })
+      !mixResult.rowCount && reject({ message: `Could not find mix with id ${id}` })
 
       const flavourResult = await pool.query(
         `SELECT flavours.flavour_id, flavours.name
@@ -78,7 +78,7 @@ const getSingleMix = id => {
           votes: +votesResult.rows[0].votes
         }
       })
-    } catch (err) { reject(err) }
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
 
   })
 }
@@ -98,10 +98,9 @@ const createEmptyMix = (name, creator) => {
         `SELECT user_id, name FROM Users
        WHERE user_id = $1`, [creator]
       )
-      console.log(mixResult.rows[0]);
-      console.log(userResult.rows[0]);
+
       resolve({ success: true, mix: mixResult.rows[0], creator: userResult.rows[0] })
-    } catch (err) { reject(err) }
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
@@ -123,7 +122,7 @@ const addFlavour = ({ mix_id, user_id, flavour_id }) => {
         RETURNING *`,
         [flavour_id, mix_id])
 
-      !result.rowCount && resolve({ success: false, message: `Could not add flavour with id ${flavour_id} to mix with id ${mix_id}` })
+      !result.rowCount && reject({ message: `Could not add flavour with id ${flavour_id} to mix with id ${mix_id}` })
 
       const nameResult = await pool.query(
         `SELECT flavours.name as flavour_name, mixes.name as mix_name
@@ -136,7 +135,7 @@ const addFlavour = ({ mix_id, user_id, flavour_id }) => {
       )
 
       resolve({ success: true, mix: { id: mix_id, name: nameResult.rows[0].mix_name }, flavour: { id: flavour_id, name: nameResult.rows[0].flavour_name } })
-    } catch (err) { reject(err) }
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
@@ -158,7 +157,7 @@ const removeFlavour = ({ mix_id, user_id, flavour_id }) => {
         RETURNING *`,
         [mix_id, flavour_id])
 
-      !deleteResult.rowCount && resolve({ success: false, message: `Could not remove flavour with id ${flavour_id} from mix with id ${mix_id}` })
+      !deleteResult.rowCount && reject({ message: `Could not remove flavour with id ${flavour_id} from mix with id ${mix_id}` })
 
       const result = await pool.query(
         `SELECT DISTINCT mixes.name AS mix_name, flavours.name AS flavour_name
@@ -174,7 +173,7 @@ const removeFlavour = ({ mix_id, user_id, flavour_id }) => {
         success: true,
         message: `Removed flavour ${result.rows[0].flavour_name} from mix ${result.rows[0].mix_name}`
       })
-    } catch (err) { reject(err) }
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
@@ -210,7 +209,7 @@ const deleteMix = ({ mix_id, user_id }) => {
       !result.rowCount && reject({ message: `Could not find mix with id ${mix_id}` })
 
       resolve({ success: true, message: `Mix with id ${mix_id} deleted` })
-    } catch (err) { reject(err) }
+    } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
 
