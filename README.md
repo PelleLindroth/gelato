@@ -1,8 +1,8 @@
 # **Gelato API**
 ## Flavours
 ***
-### <span style="color:#0CBC52">**GET**</span> Get all flavours
-`/api/v1/flavours`
+### Get all flavours
+### <span style="color:#0CBC52">**GET**</span> `/api/v1/flavours`
 #### Example response:
 ```json 
 {
@@ -28,8 +28,8 @@
     ]
 }
 ```
-### <span style="color:#FFB401;font-weight:bold">**POST**</span> Create flavour
-`/api/v1/flavours`
+### Create flavour
+### <span style="color:#FFB401;font-weight:bold">**POST**</span> `/api/v1/flavours`
 #### Example request body (JSON):
 ```json
 {
@@ -46,8 +46,8 @@
     }
 }
 ```
-### <span style="color:#505050">**PATCH**</span> Update flavour
-`/api/v1/flavours/:id`
+### Update flavour
+### <span style="color:#505050">**PATCH**</span> `/api/v1/flavours/:id`
 #### Example request body (JSON):
 ```json
 {
@@ -66,13 +66,13 @@
 ```
 ## Users
 ***
-### <span style="color:#FFB401;font-weight:bold">**POST**</span> Create user
-`/api/v1/users`
+### Create user
+### <span style="color:#FFB401;font-weight:bold">**POST**</span> `/api/v1/users`
 #### Example request body:
 ```json
 {
-  "name": "Kenta",
-  "email": "kenta@spray.se"
+    "name": "Monica",
+    "email": "månkan87@hotmail.com"
 }
 ```
 #### Example response:
@@ -80,15 +80,16 @@
 {
     "success": true,
     "user": {
-        "user_id": 4,
-        "name": "Kenta",
-        "email": "kenta@spray.se",
-        "favorite_mix": null
+        "user_id": 11,
+        "name": "Monica",
+        "email": "månkan87@hotmail.com",
+        "favorite_mix": null,
+        "role": "customer"
     }
 }
 ```
-### <span style="color:#0CBC52">**GET**</span> Get all users
-`/api/v1/users/`
+### Get all users
+### <span style="color:#0CBC52">**GET**</span> `/api/v1/users/`
 #### Example response:
 ```json
 {
@@ -122,22 +123,23 @@
     ]
 }
 ```
-### <span style="color:#0CBC52">**GET**</span> Get single user
-`/api/v1/users/:id`
+### Get single user
+### <span style="color:#0CBC52">**GET**</span> `/api/v1/users/:id`
 #### Example response:
 ```json
 {
     "success": true,
-    "result": {
-        "user_id": 2,
-        "name": "Koffe",
-        "email": "koffe@yahoo.com",
-        "favorite_mix": null
+    "user": {
+        "user_id": 5,
+        "name": "Jonte",
+        "email": "jonte87@gmail.com",
+        "favorite_mix": 13,
+        "role": "customer"
     }
 }
 ```
-### <span style="color:#505050">**PATCH**</span> Cast vote
-`/api/v1/users/:user_id/mixes/:mix_id`
+### Cast vote
+### <span style="color:#505050">**PATCH**</span> `/api/v1/users/:user_id/mixes/:mix_id`
 #### Example request body (JSON):
 ```json
 {
@@ -153,73 +155,58 @@
 ```
 ## Mixes
 ***
-### <span style="color:#0CBC52">**GET**</span> Get all mixes
-`/api/v1/mixes`
+### Get all mixes
+### <span style="color:#0CBC52">**GET**</span> `/api/v1/mixes`
 #### Example response:
 ```json
 {
-  "success": true,
-  "count": 2,
-  "results": [
-    {
-      "id": 1,
-      "name": "Falles special",
-      "flavours": [
-        "Chocolate",
-        "Blueberry",
-        "Fudge"
-      ],
-      "creator": {
-        "id": 1,
-        "name": "Falle"
-      }
-    },
-    {
-      "id": 2,
-      "name": "Kentas choklad special",
-      "flavours": [
-        "Chocolate",
-        "Chocolate Chip Cookie",
-        "Oreo"
-      ],
-      "creator": {
-        "id": 4,
-        "name": "Kenta"
-      }
+    "success": true,
+    "count": 2,
+    "results": [
+        {
+            "mix_id": 1,
+            "name": "Falles första mix",
+            "creator": {
+                "user_id": 1,
+                "name": "Falle"
+            },
+            "flavours": [
+            {
+                "flavour_id": 2,
+                "name": "Chocolate"
+            },
+            {
+                "flavour_id": 4,
+                "name": "Blueberry"
+            }
+            ],
+            "votes": 2
+        },
+        {
+            "mix_id": 13,
+            "name": "Koffes testmix",
+            "creator": {
+                "user_id": 2,
+                "name": "Koffe"
+            },
+            "flavours": [
+                {
+                    "flavour_id": 4,
+                    "name": "Blueberry"
+                },
+                {
+                    "flavour_id": 8,
+                    "name": "Pecan"
+                }
+            ],
+            "votes": 2
+        }
+    ]
 }
 ```
-### <span style="color:#0CBC52">**GET**</span> Get votes for all mixes
-`/api/v1/mixes/votes`
-#### Example response:
-```json
-{
-  "success": true,
-  "message": "Only showing mixes with at least 1 vote",
-  "count": 2,
-  "results": [
-    {
-      "name": "Falles special",
-      "votes": 3
-    },
-    {
-      "name": "Kentas choklad special",
-      "votes": 2
-    }
-  ]
-}
-```
-### <span style="color:#0CBC52">**GET**</span> Get votes for single mix
-`/api/v1/mixes/:id/votes`
-#### Example response:
-```json
-{
-  "success": true,
-  "votes": 2
-}
-```
-### <span style="color:#FFB401;font-weight:bold">**POST**</span> Create empty mix
-`/api/v1/mixes/users/:id`
-#### Example request (JSON)
+### Create empty mix
+### <span style="color:#FFB401;font-weight:bold">**POST**</span> `/api/v1/mixes/users/:id`
+#### Example request body (JSON)
 ```json
 {
   "name": "Kentas bärbonanza"
@@ -239,9 +226,8 @@
     }
 }
 ```
-
-### <span style="color:#087BED;font-weight:bold">**PUT**</span> Add flavour to mix
-`/api/v1/mixes/:mix_id/flavours/:flavour_id`
+### Add flavour to mix
+### <span style="color:#087BED;font-weight:bold">**PUT**</span> `/api/v1/mixes/:mix_id/users/:user_id/flavours/:flavour_id`
 #### Example response:
 ```json
 {
@@ -256,8 +242,8 @@
     }
 }
 ```
-### <span style="color:#EC2013;font-weight:bold">**DELETE**</span> Remove flavour from mix
-`/api/v1/mixes/:mix_id/flavours/:flavour_id`
+Remove flavour from mix
+### <span style="color:#EC2013;font-weight:bold">**DELETE**</span> `/api/v1/mixes/:mix_id/users/:user_id/flavours/:flavour_id`
 #### Example response:
 ```json
 {
@@ -265,8 +251,8 @@
     "message": "Removed flavour Chocolate from mix Koffes special"
 }
 ```
-### <span style="color:#EC2013;font-weight:bold">**DELETE**</span> Delete mix
-`/api/v1/mixes/:id`
+Delete mix
+### <span style="color:#EC2013;font-weight:bold">**DELETE**</span> `/api/v1/mixes/:mix_id/users/:user_id`
 #### Example response:
 ```json
 {
