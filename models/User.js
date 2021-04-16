@@ -1,21 +1,53 @@
 const pool = require('../db/connection')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
 
-const createUser = ({ name, email }) => {
-  if (!name || !email) throw ('Invalid query. Required: name and email in body')
+const createUser = ({ name, email, password }) => {
+  if (!name || !email || !password) throw ('Invalid query. Required: name and email in body')
+  const digest = bcrypt.hashSync(password, 10)
 
   return new Promise(async (resolve, reject) => {
     try {
       const result = await pool.query(
-        `INSERT INTO users (name, email, role)
-        VALUES ($1, $2, 'customer')
-        RETURNING *`,
-        [name, email]
+        `INSERT INTO users (name, email, password, role)
+        VALUES ($1, $2, $3, 'customer')
+        RETURNING name, user_id, email`,
+        [name, email, digest]
       )
 
       !result.rowCount && reject({ message: `Could not create user` })
 
       resolve({ success: true, user: result.rows[0] })
     } catch (err) { reject({ code: err.code, message: err.detail }) }
+  })
+}
+
+const loginUser = async ({ email, password }) => {
+  if (!email || !password) throw ('Invalid query. Required: email and password in body')
+
+  const result = await pool.query(`SELECT * FROM USERS WHERE email = $1`, [email])
+  const valid = bcrypt.compareSync(password, result.rows[0].password)
+
+  if (valid) {
+    const payload = { email }
+    const token = jwt.sign(payload, process.env.JWT_SECRET)
+    return ({ token })
+  } else {
+    return ({ success: false, message: 'Access denied' })
+  }
+}
+
+const getUserInfo = async email => {
+  return new Promise(async (resolve, reject) => {
+    const result = await pool.query(`
+    SELECT name, email, role, favorite_mix FROM USERS
+    WHERE email = $1`, [email])
+
+    if (result.rowCount) {
+      resolve({ success: true, result: result.rows[0] })
+    } else {
+      reject({ success: false, message: 'Access denied' })
+    }
   })
 }
 
@@ -70,6 +102,8 @@ const castVote = ({ user_id, mix_id }, email) => {
 
 module.exports = {
   createUser,
+  loginUser,
+  getUserInfo,
   getSingleUser,
   getAllUsers,
   castVote
