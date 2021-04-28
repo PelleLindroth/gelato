@@ -1,0 +1,10 @@
+.home {
+  flex: 1;
+
+  .home-wrapper {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    margin-top: 6rem;
+  }
+}

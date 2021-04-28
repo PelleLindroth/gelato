@@ -1,0 +1,12 @@
+@import './base';
+@import './settings';
+@import './views/home.scss';
+@import './views/register.scss';
+@import './views/login.scss';
+@import './views/dashboard.scss';
+
+// Components
+@import './components/header.scss';
+
+// Fonts
+@import url('https://fonts.googleapis.com/css2?family=Fugaz+One&family=Roboto:wght@300;400;700&display=swap');

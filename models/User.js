@@ -1,76 +1,75 @@
-const pool = require('../db/connection')
+const db = require('../db/connection')
+const { DataTypes } = require('sequelize')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const Mix = require('./Mix')
 
-const createUser = ({ name, email }) => {
-  if (!name || !email) throw ('Invalid query. Required: name and email in body')
-
-  return new Promise(async (resolve, reject) => {
-    try {
-      const result = await pool.query(
-        `INSERT INTO users (name, email, role)
-        VALUES ($1, $2, 'customer')
-        RETURNING *`,
-        [name, email]
-      )
-
-      !result.rowCount && reject({ message: `Could not create user` })
-
-      resolve({ success: true, user: result.rows[0] })
-    } catch (err) { reject({ code: err.code, message: err.detail }) }
-  })
-}
-
-const getSingleUser = id => {
-  if (!id) throw ('Invalid query. Required: user_id')
-
-  return new Promise(async (resolve, reject) => {
-    try {
-      const result = await pool.query(`SELECT * FROM Users WHERE user_id = $1`, [id])
-
-      !result.rowCount && reject({ message: `Could not find user with id ${id}` })
-
-      resolve({ success: true, user: result.rows[0] })
-    } catch (err) { reject({ code: err.code, message: err.detail }) }
-  })
-}
-
-const getAllUsers = () => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const result = await pool.query(`SELECT * FROM UsersORDER BY user_id`)
-
-      !result.rowCount && reject({ message: 'No users found' })
-
-      resolve({ success: true, count: result.rowCount, results: result.rows })
-    } catch (err) { reject({ code: err.code, message: err.detail }) }
+const User = db.define('User', {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: {
+      args: true,
+      msg: 'Username already exists'
+    }
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: {
+      args: true,
+      msg: 'Email already exists!'
+    },
+    validate: {
+      isEmail: true
+    }
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  favoriteMix: {
+    type: DataTypes.INTEGER,
   }
-  )
+}, {
+  timestamps: false
+})
+
+//Creator in Mix
+User.hasMany(Mix, {
+  foreignKey: 'creator',
+  allowNull: false
+})
+Mix.belongsTo(User)
+
+// FavoriteMix in User
+Mix.hasMany(User, {
+  foreignKey: 'favoriteMix',
+  constraints: false
+})
+
+User.beforeCreate((user, options) => {
+  user.password = bcrypt.hashSync(user.password, 10)
+})
+
+User.authenticate = async ({ email, password }) => {
+  const user = await User.findOne({ where: { email } })
+  if (!user) return ({ success: false, message: 'Invalid credentials. Please check your email' })
+
+  const valid = bcrypt.compareSync(password, user.password)
+
+  if (valid) {
+    const payload = { email, id: user.id }
+    const token = jwt.sign(payload, process.env.JWT_SECRET)
+    return { success: true, token }
+  } else {
+    return ({ success: false, message: 'Access denied. Your email and password don\'t match' })
+  }
 }
 
-const castVote = ({ user_id, mix_id }, email) => {
-  if (!user_id || !mix_id | !email) throw ('Invalid query. Required: user_id and mix_id in path, email in body')
-
-  return new Promise(async (resolve, reject) => {
-    try {
-      const authResult = await pool.query(`SELECT email FROM users WHERE user_id = $1`, [user_id])
-
-      authResult.rows[0].email.localeCompare(email) && reject({ message: 'Access denied' })
-
-      const result = await pool.query(
-        `UPDATE users
-            SET favorite_mix = $1
-            WHERE user_id = $2`,
-        [mix_id, user_id])
-
-      !result.rowCount && reject({ message: `Could not cast vote on mix with id ${mix_id}` })
-
-      resolve({ success: true, message: `User with id ${user_id} cast their vote on mix with id ${mix_id}` })
-    } catch (err) { reject({ code: err.code, message: err.detail }) }
-  })
+User.validateToken = async (token) => {
+  try { return jwt.verify(token, process.env.JWT_SECRET) }
+  catch (err) { return err } // throw tokenExpired/Unauthorized
 }
 
-module.exports = {
-  createUser,
-  getSingleUser,
-  getAllUsers,
-  castVote
-}
+module.exports = User
