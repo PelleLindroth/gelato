@@ -1,5 +1,13 @@
+@import './settings';
+
 :root {
   font-size: 62.5%;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 * {
@@ -10,9 +18,21 @@
 
 body {
   background-color: #fffff0;
+  color: $off-black;
   cursor: default;
   font-family: 'Roboto', sans-serif;
+  height: 100vh;
   min-height: 100vh;
+
+  header {
+    display: flex;
+    justify-content: center;
+
+    img {
+      width: 50%;
+      height: 100%;
+    }
+  }
 
   a {
     color: inherit;
@@ -20,10 +40,54 @@ body {
   }
 
   h1 {
-    font-size: 3rem;
+    font-size: 2.2rem;
+    text-align: center;
   }
 
   h2 {
-    font-size: 2.8rem;
+    font-size: 1.6rem;
+    text-align: center;
+  }
+
+  label {
+    color: $blueberry;
+    color: $off-black;
+    font-weight: 700;
+  }
+
+  button,
+  input {
+    background-color: #fff;
+    border-width: 2px 0.5rem;
+    border-style: solid;
+    box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    margin: 0.75rem 0;
+    min-width: 20rem;
+    outline: none;
+    padding: 0.5rem 0;
+    transform: skew(-15deg);
+
+    p {
+      color: $off-black;
+      font-family: 'Fugaz One', cursive;
+      transform: skew(14deg);
+    }
+  }
+
+  .back-button-container {
+    margin-bottom: 4rem;
+    margin-top: auto;
+
+    .back-button {
+      color: $off-black;
+      font-family: 'Fugaz One', cursive;
+    }
+  }
+
+  input {
+    border-color: $chocolate;
+    padding: 0.5rem;
+    transform: none;
   }
 }

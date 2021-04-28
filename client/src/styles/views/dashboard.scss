@@ -1,0 +1,117 @@
+.dashboard {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+
+  h1 {
+    color: $blueberry;
+    margin: 3rem 0 1rem;
+  }
+
+  h2 {
+    color: $strawberry;
+    margin-top: 2rem;
+  }
+
+  .mix-list {
+    list-style: none;
+
+    .mix-title {
+      background-color: $chocolate;
+      border-radius: 3px;
+      box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.25);
+      color: $vanilla;
+      display: flex;
+      font-family: 'Fugaz One', cursive;
+      font-size: 1.6rem;
+      font-weight: 700;
+      justify-content: center;
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      text-align: center;
+      width: 30rem;
+      z-index: 1;
+
+      p {
+        margin-left: auto;
+      }
+      img {
+        margin-left: auto;
+        max-width: 2.4rem;
+      }
+    }
+
+    .mix-details {
+      background-color: $vanilla;
+      color: $off-black;
+      margin-top: 1rem;
+      max-height: 0px;
+      overflow: hidden;
+      padding: 0 1rem;
+      transition: all 0.3s ease-in-out;
+      width: 30rem;
+      z-index: 0;
+
+      .flavour-list {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        list-style: none;
+
+        .flavour-name {
+          align-items: center;
+          border-bottom: 1px solid $waffle;
+          display: flex;
+          padding: 1rem;
+          width: 100%;
+
+          p {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-left: auto;
+          }
+          .delete-icon {
+            margin-left: auto;
+            max-height: 2rem;
+          }
+        }
+        .add-icon {
+          margin: 0.5rem 0;
+        }
+      }
+
+      .mix-footer {
+        background-color: #fff;
+        border-width: 2px 0.5rem;
+        border-style: solid;
+        color: $off-black;
+        font-size: 1.3rem;
+        padding: 0.5rem;
+
+        p {
+          font-family: 'Fugaz One', cursive;
+          text-align: center;
+        }
+      }
+    }
+
+    .expanded {
+      overflow: scroll;
+      max-height: 20rem;
+    }
+  }
+}
+.options {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2rem;
+  margin-top: auto;
+}
+
+.logout-button {
+  color: $off-black;
+  font-family: 'Fugaz One', cursive;
+  margin-top: 2rem;
+}

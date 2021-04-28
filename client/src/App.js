@@ -1,24 +1,59 @@
 import './styles/App.scss'
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+
+import { useEffect } from 'react'
+import { connect } from 'react-redux'
+import * as API from './api'
+import { BrowserRouter as Router, Route } from 'react-router-dom'
+
 import Header from './components/Header'
 import Home from './views/Home'
 import Login from './views/Login'
 import Dashboard from './views/Dashboard'
 import Mixes from './views/Mixes'
+import Register from './views/Register'
 
-// import UserList from './components/UserList'
-// const users = ['Falle', 'Greta', 'Kenta', 'Jonte', 'Kerstin']
+const App = ({ onSetMixes, onSetFlavours }) => {
+  useEffect(() => {
+    (async () => {
+      const mixes = await API.getMixes()
+      if (mixes.success) {
+        onSetMixes(mixes.results)
+      }
+    })()
+  }, [onSetMixes])
 
-function App() {
+  useEffect(() => {
+    (async () => {
+      const flavours = await API.getFlavours()
+      if (flavours.success) {
+        onSetFlavours(flavours.results)
+      }
+    })()
+  }, [onSetFlavours])
+
   return (
     <Router>
       <Header />
-        <Route path="/" exact component={Home} />
-        <Route path="/login" exact component={Login} />
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/mixes" component={Mixes} />
+      <Route path="/" exact component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/mixes" component={Mixes} />
     </Router>
   )
 }
 
-export default App
+const mapDispatchToProps = dispatch => ({
+  onSetMixes: mixes =>
+    dispatch({
+      type: 'SET_MIXES',
+      payload: mixes
+    }),
+  onSetFlavours: flavours =>
+    dispatch({
+      type: 'SET_FLAVOURS',
+      payload: flavours
+    })
+})
+
+export default connect(undefined, mapDispatchToProps)(App)
