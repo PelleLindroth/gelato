@@ -1,40 +1,44 @@
 const User = require('../models/User')
 
-const createUser = async (req, res, next) => {
-  try { res.json(await User.createUser(req.body)) }
-  catch (err) { next(err) }
-}
-
-const loginUser = async (req, res) => {
-  try { res.json(await User.loginUser(req.body)) }
-  catch (err) { res.status(401).json({ success: false, message: 'access denied' }) }
-}
-
-const getUserInfo = async (req, res) => {
-  try { res.json(await User.getUserInfo(req.userEmail)) }
-  catch (err) { res.status(401).json({ success: false, message: 'access denied' }) }
-}
-
-const getSingleUser = async (req, res, next) => {
-  try { res.json(await User.getSingleUser(req.params.id)) }
-  catch (err) { next(err) }
-}
-
-const getAllUsers = async (req, res, next) => {
-  try { res.json(await User.getAllUsers()) }
-  catch (err) { next(err) }
-}
-
-const castVote = async (req, res, next) => {
-  try { res.json(await User.castVote(req.params, req.body.email)) }
-  catch (err) { next(err) }
-}
-
 module.exports = {
-  createUser,
-  loginUser,
-  getUserInfo,
-  getSingleUser,
-  getAllUsers,
-  castVote
+  async register(req, res, next) {
+    try {
+      await User.create(req.body)
+      res.send({ success: true, message: 'User successfully created' })
+    } catch (err) { next(err) }
+  },
+  async login(req, res, next) {
+    try {
+      const user = await User.authenticate(req.body)
+      res.json(user)
+    } catch (err) { next(err) }
+  },
+  async get(req, res, next) {
+    try {
+      const user = await User.findOne({
+        where: { email: req.user.email }
+      })
+
+      res.json({ success: true, user: { id: user.id, name: user.name, email: user.email, favoriteMix: user.favoriteMix } })
+    } catch (err) { next(err) }
+  },
+  async getAll(req, res, next) {
+    try {
+      const users = await User.findAll()
+
+      res.json({
+        success: true, users: users.map(user => (
+          { id: user.id, name: user.name }
+        ))
+      })
+    } catch (err) { next(err) }
+  },
+  async vote(req, res, next) {
+    console.log(req.user);
+    try {
+      const success = await User.update({ favoriteMix: req.params.mix_id }, { where: { id: req.user.id } })
+      console.log(success)
+      res.json({ success: true })
+    } catch (err) { next(err) }
+  }
 }

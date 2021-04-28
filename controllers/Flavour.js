@@ -1,22 +1,15 @@
 const Flavour = require('../models/Flavour')
 
-const createFlavour = async (req, res, next) => {
-  try { res.json(await Flavour.createFlavour(req.body)) }
-  catch (err) { next(err) }
-}
-
-const getFlavours = async (req, res, next) => {
-  try { res.json(await Flavour.getFlavours()) }
-  catch (err) { next(err) }
-}
-
-const updateFlavour = async (req, res, next) => {
-  try { res.json(await Flavour.updateFlavour(req.body.name, req.params.id)) }
-  catch (err) { next(err) }
-}
-
 module.exports = {
-  createFlavour,
-  getFlavours,
-  updateFlavour
+  async create(req, res, next) {
+    try { res.json(await Flavour.create(req.body)) }
+    catch (err) { next(err) }
+  },
+  async get(req, res, next) {
+    try {
+      const flavours = await Flavour.findAll()
+      res.json(res.json(flavours.map(flavour => ({ id: flavour.id, name: flavour.name }))))
+    }
+    catch (err) { next(err) }
+  }
 }

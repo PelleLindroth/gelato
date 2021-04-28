@@ -19,7 +19,7 @@
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.5.1",
-    "sequel": "^0.3.10",
+    "sequelize": "^6.6.2",
     "sqlite3": "^5.0.2"
   }
 }
