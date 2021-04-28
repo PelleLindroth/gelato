@@ -19,6 +19,6 @@ UserRoutes.get('/users', User.getAllUsers)
 UserRoutes.get('/users/:id', User.getSingleUser)
 
 // User cast vote
-UserRoutes.patch('/users/:user_id/mixes/:mix_id', User.castVote)
+UserRoutes.patch('/users/:user_id/mixes/:mix_id', authenticate, User.castVote)
 
 module.exports = UserRoutes

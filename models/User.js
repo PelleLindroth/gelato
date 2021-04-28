@@ -3,7 +3,8 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 
 const createUser = ({ name, email, password }) => {
-  if (!name || !email || !password) throw ('Invalid query. Required: name and email in body')
+  if (!name || !email || !password) throw ('Invalid query. Required: name, email and password in body')
+
   const digest = bcrypt.hashSync(password, 10)
 
   return new Promise(async (resolve, reject) => {
@@ -17,7 +18,7 @@ const createUser = ({ name, email, password }) => {
 
       !result.rowCount && reject({ message: `Could not create user` })
 
-      resolve({ success: true, user: result.rows[0] })
+      resolve({ success: true })
     } catch (err) { reject({ code: err.code, message: err.detail }) }
   })
 }
@@ -30,8 +31,17 @@ const loginUser = async ({ email, password }) => {
 
   if (valid) {
     const payload = { email }
-    const token = jwt.sign(payload, process.env.JWT_SECRET)
-    return ({ token })
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' })
+
+    const user = {
+      name: result.rows[0].name,
+      email: result.rows[0].email,
+      id: result.rows[0].user_id,
+      favoriteMix: result.rows[0].favorite_mix,
+      token
+    }
+
+    return ({ success: true, user })
   } else {
     return ({ success: false, message: 'Access denied' })
   }
@@ -40,7 +50,7 @@ const loginUser = async ({ email, password }) => {
 const getUserInfo = async email => {
   return new Promise(async (resolve, reject) => {
     const result = await pool.query(`
-    SELECT name, email, role, favorite_mix FROM USERS
+    SELECT user_id as id, name, email, role, favorite_mix FROM USERS
     WHERE email = $1`, [email])
 
     if (result.rowCount) {
@@ -68,7 +78,7 @@ const getSingleUser = id => {
 const getAllUsers = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      const result = await pool.query(`SELECT * FROM UsersORDER BY user_id`)
+      const result = await pool.query(`SELECT * FROM Users ORDER BY user_id`)
 
       !result.rowCount && reject({ message: 'No users found' })
 

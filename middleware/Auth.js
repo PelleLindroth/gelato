@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const { authErrorHandler } = require('../errors')
 
 const authenticate = (req, res, next) => {
   try {
@@ -7,9 +8,8 @@ const authenticate = (req, res, next) => {
     req.userEmail = data.email
 
     next()
-
   } catch (err) {
-    res.status(403).json({ success: false, message: 'Access denied' })
+    next(new authErrorHandler())
   }
 }
 
