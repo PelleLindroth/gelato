@@ -1,5 +1,5 @@
-import React, {useState} from 'react'
-import {useHistory} from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useHistory } from 'react-router-dom'
 import { connect } from 'react-redux';
 import expandIcon from '../assets/expand.svg'
 import collapseIcon from '../assets/collapse.svg'
@@ -21,30 +21,38 @@ const Dashboard = ({user, mixes}) => {
   return (
     <div className="dashboard">
       <h1>Your mixes</h1>
-      <ul className="mix-list">
-        {mixes.map((mix, index) => (
-          <li key={mix.mix_id} className="mix-item">
-            <div className="mix-title" >
-              <p>{mix.name}</p> <img onClick={() => toggleExpand(index)} src={index === clickedItemIndex ? collapseIcon : expandIcon} alt=""/>
-            </div>
-              <div className={`mix-details ${index === clickedItemIndex ? 'expanded' : ''}`}>
-                <ul className="flavour-list">
-                  {mix.flavours.map(flavour => {
-                    return (
-                      <li className="flavour-name" key={flavour.flavour_id}><p>{flavour.name}</p><img className="delete-icon" src={deleteIcon} title="Delete flavour" alt="Delete"/></li>
-                      )
-                    })}
-                  <li><img className="add-icon" src={addIcon} title="Add flavour" alt="Add"/></li>
-                </ul>
-                <div className="mix-footer">
-                    <p>Votes: {mix.votes}</p>
-                </div>
-              </div>
-          </li>
-        ))}
-      </ul>
+      {mixes.length ? (
+           <ul className="mix-list">
+           {mixes.map((mix, index) => (
+             <li key={mix.mix_id} className="mix-item">
+               <div className="mix-title" >
+                 <p>{mix.name}</p> <img onClick={() => toggleExpand(index)} src={index === clickedItemIndex ? collapseIcon : expandIcon} alt=""/>
+               </div>
+                 <div className={`mix-details ${index === clickedItemIndex ? 'expanded' : ''}`}>
+                   <ul className="flavour-list">
+                     {mix.flavours.map(flavour => {
+                       return (
+                         <li className="flavour-name" key={flavour.flavour_id}><p>{flavour.name}</p><img className="delete-icon" src={deleteIcon} title="Delete flavour" alt="Delete"/></li>
+                         )
+                       })}
+                     <li><img className="add-icon" src={addIcon} title="Add flavour" alt="Add"/></li>
+                   </ul>
+                   <div className="mix-footer">
+                       <p>Votes: {mix.votes}</p>
+                   </div>
+                 </div>
+             </li>
+           ))}
+         </ul>
+      ) : (
+       <p>You don't have any mixes yet</p>
+      )
+    }
+   
       <div className="options">
+        <Link to="/create">
         <button style={{ 'borderColor': '#FC5A8D' }}><p>CREATE NEW MIX &gt;&gt;</p></button>
+        </Link>
         <button style={{ 'borderColor': '#4E86F7' }}><p>SEE ALL MIXES &gt;&gt;</p></button>
         <div className="back-button-container">
           <div className="logout-button">LOG OUT</div>
