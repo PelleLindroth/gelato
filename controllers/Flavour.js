@@ -7,8 +7,10 @@ module.exports = {
   },
   async get(req, res, next) {
     try {
-      const flavours = await Flavour.findAll()
-      res.json(res.json(flavours.map(flavour => ({ id: flavour.id, name: flavour.name }))))
+      const flavours = await Flavour.findAll({
+        order: ['name']
+      })
+      res.json(flavours.map(flavour => ({ id: flavour.id, name: flavour.name })))
     }
     catch (err) { next(err) }
   }
