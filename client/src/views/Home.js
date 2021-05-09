@@ -9,12 +9,11 @@ const Home = ({ onSetUser }) => {
   useEffect(() => {
     (async () => {
       const token = API.getUserToken()
-
       if (token) {
         const user = await API.getUserByToken(token)
 
         if (user) {
-          onSetUser(user.data.result)
+          onSetUser(user.data.user)
           history.push('/dashboard')
         } else {
           API.removeUserToken()

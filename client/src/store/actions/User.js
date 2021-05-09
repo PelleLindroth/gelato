@@ -5,7 +5,7 @@ export const loginUser = credentials => async dispatch => {
   const response = await API.loginUser(email, password)
 
   if (response.success) {
-    API.setTokenInLocalStorage(response.user.token)
+    API.setTokenInLocalStorage(response.token)
     dispatch({ type: 'SET_USER', payload: response.user })
     return true
   } else {
