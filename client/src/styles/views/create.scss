@@ -1,0 +1,86 @@
+.create {
+  h1 {
+    background-color: $blueberry;
+    color: $vanilla;
+    margin: 2rem 0;
+    padding: 3px;
+  }
+
+  .choose-name {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    margin-top: 5rem;
+
+    input {
+      border-color: $strawberry;
+      font-size: 1.8rem;
+      font-weight: 700;
+      height: 4rem;
+      text-align: center;
+      text-transform: uppercase;
+      width: 25rem;
+    }
+  }
+
+  .choose-flavours,
+  .done {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    margin-top: 2rem;
+
+    h2 {
+      color: $strawberry;
+      font-family: 'Fugaz One', cursive;
+      font-size: 2.5rem;
+      text-transform: uppercase;
+    }
+
+    h3 {
+      margin-bottom: 2rem;
+    }
+
+    .flavours {
+      align-items: center;
+      color: white;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 2rem;
+      max-width: 50rem;
+
+      li {
+        align-items: center;
+        background-color: $blueberry;
+        border-radius: 50%;
+        box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.25);
+        height: 7.5rem;
+        display: flex;
+        justify-content: center;
+        margin: 0.3rem;
+        width: 7.5rem;
+
+        p {
+          color: white;
+          font-weight: 700;
+          max-width: 5rem;
+          text-align: center;
+        }
+      }
+    }
+
+    button {
+      margin: 2.5rem 0;
+    }
+  }
+
+  .done {
+    .flavours {
+      li {
+        background-color: $strawberry;
+      }
+    }
+  }
+}
