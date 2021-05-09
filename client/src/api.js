@@ -7,7 +7,7 @@ export const registerUser = async user => {
   try {
     const { name, email, password } = user
 
-    const response = await API.post('/register', {
+    const response = await API.post('/users/register', {
       name,
       email,
       password
@@ -21,7 +21,7 @@ export const registerUser = async user => {
 
 export const loginUser = async (email, password) => {
   try {
-    const response = await API.post('./auth', {
+    const response = await API.post('/users/auth', {
       email,
       password
     })
@@ -34,7 +34,7 @@ export const loginUser = async (email, password) => {
 
 export const getUserByToken = async token => {
   try {
-    const response = await API.get('./me', {
+    const response = await API.get('/users/me', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -60,8 +60,24 @@ export const removeUserToken = () => {
 
 export const getMixes = async () => {
   try {
-    const response = await API.get('./mixes')
+    const response = await API.get('/mixes')
     return response.data
+  } catch (err) {
+    return false
+  }
+}
+
+export const createNewMix = async (mix, token) => {
+  try {
+    const response = await API.post('/mixes', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      data: {
+        mix
+      }
+    })
+    return response
   } catch (err) {
     return false
   }
@@ -69,7 +85,7 @@ export const getMixes = async () => {
 
 export const getFlavours = async () => {
   try {
-    const response = await API.get('./flavours')
+    const response = await API.get('/flavours')
     return response.data
   } catch (err) {
     return false
