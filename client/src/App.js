@@ -9,6 +9,7 @@ import Header from './components/Header'
 import Home from './views/Home'
 import Login from './views/Login'
 import Dashboard from './views/Dashboard'
+import Create from './views/Create'
 import Mixes from './views/Mixes'
 import Register from './views/Register'
 
@@ -16,18 +17,14 @@ const App = ({ onSetMixes, onSetFlavours }) => {
   useEffect(() => {
     (async () => {
       const mixes = await API.getMixes()
-      if (mixes.success) {
-        onSetMixes(mixes.results)
-      }
+      mixes.success && onSetMixes(mixes.results)
     })()
   }, [onSetMixes])
 
   useEffect(() => {
     (async () => {
       const flavours = await API.getFlavours()
-      if (flavours.success) {
-        onSetFlavours(flavours.results)
-      }
+      flavours && onSetFlavours(flavours)
     })()
   }, [onSetFlavours])
 
@@ -38,6 +35,7 @@ const App = ({ onSetMixes, onSetFlavours }) => {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/create" component={Create} />
       <Route path="/mixes" component={Mixes} />
     </Router>
   )
