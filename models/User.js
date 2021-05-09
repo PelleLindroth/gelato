@@ -61,7 +61,7 @@ User.authenticate = async ({ email, password }) => {
   if (valid) {
     const payload = { email, id: user.id }
     const token = jwt.sign(payload, process.env.JWT_SECRET)
-    return { success: true, token }
+    return { success: true, user: { id: user.id, name: user.name, email: user.email, favoriteMix: user.favoriteMix }, token }
   } else {
     return ({ success: false, message: 'Access denied. Your email and password don\'t match' })
   }
